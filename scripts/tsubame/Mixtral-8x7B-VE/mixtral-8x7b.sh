@@ -1,19 +1,23 @@
 #!/bin/sh
 #$ -cwd
 #$ -l node_f=4
-#$ -l h_rt=0:30:00
-#$ -o outputs/mixtral-8x7b-VE/$JOB_ID
-#$ -e outputs/mixtral-8x7b-VE/$JOB_ID
+#$ -l h_rt=1:00:00
+#$ -o outputs/mixtral-8x7b-VE/$JOB_ID.log
+#$ -e outputs/mixtral-8x7b-VE/$JOB_ID.log
 #$ -p -5
 
 # Load modules
-module use ~/modulefiles
+module use /gs/fs/tga-NII-LLM/modules/modulefiles
 
 module load ylab/cuda/12.1
 module load ylab/cudnn/8.9.7
-module load ylab/nccl/cuda-12.1/2.18.3
+module load ylab/nccl/cuda-12.2/2.20.5
 module load ylab/hpcx/2.17.1
 module load ninja/1.11.1
+
+# CUTLASS
+CUTLASS_HOME=/gs/fs/tga-NII-LLM/modules/apps/cutlass/cutlass/build
+export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${CUTLASS_HOME}/lib
 
 # swich virtual env
 source .env/bin/activate
@@ -65,7 +69,7 @@ GRAD_CLIP=1
 
 ADAMW_BETA1=0.9
 ADAMW_BETA2=0.95
-ADAMW_EPS=1e-5
+ADAMW_EPS=1E-8
 
 # checkpoint & tokenizer
 TOKENIZER_MODEL=/gs/bs/tge-gc24sp01/hf-checkpoints/Mixtral-8x7B-Instruct-v0.1-VE/tokenizer.model
@@ -137,6 +141,7 @@ mpirun -np $NUM_GPUS \
   -hostfile $HOSTFILE_NAME \
   -x MASTER_ADDR=$MASTER_ADDR \
   -x MASTER_PORT=$MASTER_PORT \
+  -x TORCH_NCCL_ASYNC_ERROR_HANDLING=1 \
   -bind-to none \
   -x PATH \
   python examples/finetuning.py \
@@ -160,8 +165,8 @@ mpirun -np $NUM_GPUS \
   --adam-beta1 $ADAMW_BETA1 \
   --adam-beta2 $ADAMW_BETA2 \
   --adam-eps $ADAMW_EPS \
-  --save-interval 250 \
-  --eval-interval 100 \
+  --save-interval 500 \
+  --eval-interval 500 \
   --eval-iters 10 \
   --bf16 \
   --mixed-precision \
