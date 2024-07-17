@@ -173,6 +173,7 @@ def main() -> None:
         betas=(args.adam_beta1, args.adam_beta2),
         eps=args.adam_eps,
         weight_decay=args.weight_decay,
+        fused=args.fused_optimizer,
     )
 
     if args.lr_decay_style == "cosine":

@@ -311,6 +311,9 @@ def _add_regularization_args(parser: argparse.ArgumentParser) -> argparse.Argume
         '--adam-eps', type=float, default=1e-08,
         help='Term added to the denominator to improve numerical stability'
     )
+    group.add_argument(
+        '--fused-optimizer', action='store_true',
+    )
 
     return parser
 
