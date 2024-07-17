@@ -21,6 +21,8 @@ def parse_args() -> argparse.Namespace:
     # validate
     if args.use_freeze_layers:
         assert args.no_save_optimizer_state is True
+    if args.adam_eps > 1e-8:
+        raise ValueError(f"Adam epsilon should be less than 1e-8, but got {args.adam_eps}")
 
     return args
 
