@@ -24,6 +24,7 @@ from llama_recipes.utils.checkpoint import (
     load_rng_state_dict,
     load_scheduler_state_dict,
 )
+from llama_recipes.utils.precision import preserve_fp32_buffers
 from llama_recipes.utils.distributed import get_local_rank, get_rank, is_rank_0, print_rank_0, set_mpi_env
 from llama_recipes.utils.train_utils import clear_gpu_cache, print_model_size, setup_environ_flags, train
 from megatron_lm.megatron.global_vars import set_global_variables
@@ -156,11 +157,12 @@ def main() -> None:
 
     print_model_size(model, args.base_model, rank)  # type: ignore
 
-    # Convert the model to bfloat16 if fsdp and pure_bf16 is enabled
-    if args.bf16:
-        model.to(torch.bfloat16)  # type: ignore
-    elif args.fp16:
-        model.to(torch.float16)  # type: ignore
+    # RoPE inv_freq etc. are stored in fp32, so we need to preserve them
+    with preserve_fp32_buffers(model):  # type: ignore
+        if args.bf16:
+            model.to(torch.bfloat16)  # type: ignore
+        elif args.fp16:
+            model.to(torch.float16)  # type: ignore
 
     set_z3_leaf_modules(  # z3_leaf
         model=model, leaf_module_classes=[MixtralSparseMoeBlock]  # type: ignore
@@ -191,13 +193,14 @@ def main() -> None:
         load_scheduler_state_dict(scheduler, args.load)  # type: ignore
 
     # ref: https://github.com/microsoft/DeepSpeed/pull/5008#issuecomment-1910607845
-    model, optimizer, _, _, scheduler = accelerator.prepare(
-        model,
-        optimizer,
-        train_dataloader,
-        validation_dataloader,
-        scheduler,
-    )
+    with preserve_fp32_buffers(model):  # type: ignore
+        model, optimizer, _, _, scheduler = accelerator.prepare(
+            model,
+            optimizer,
+            train_dataloader,
+            validation_dataloader,
+            scheduler,
+        )
     if args.load:
         load_model_state_dict(model, args.load)  # type: ignore
 
