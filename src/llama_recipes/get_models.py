@@ -6,12 +6,6 @@ from transformers import (
 )
 import torch
 from megatron_lm.megatron.global_vars import get_args
-from transformers.integrations import is_deepspeed_zero3_enabled
-from llama_recipes.utils.distributed import print_rank_0
-
-
-def count_parameters(model) -> int:
-    return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
 def get_model(
@@ -43,8 +37,5 @@ def get_model(
 
     else:
         raise NotImplementedError("model not implemented")
-
-    # print model parameters
-    print_rank_0(f"Model Parameters: {count_parameters(model)}")
 
     return model  # type: ignore
