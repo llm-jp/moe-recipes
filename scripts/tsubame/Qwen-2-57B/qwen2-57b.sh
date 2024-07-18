@@ -1,9 +1,9 @@
 #!/bin/sh
 #$ -cwd
-#$ -l node_f=4
+#$ -l node_f=8
 #$ -l h_rt=1:00:00
-#$ -o outputs/mixtral-8x7b-VE/$JOB_ID.log
-#$ -e outputs/mixtral-8x7b-VE/$JOB_ID.log
+#$ -o outputs/qwen2-moe-57b/$JOB_ID.log
+#$ -e outputs/qwen2-moe-57b/$JOB_ID.log
 #$ -p -5
 
 # Load modules
@@ -43,7 +43,7 @@ while read -r hostname _ rest; do
 done <"$PE_HOSTFILE" >"$HOSTFILE_NAME"
 
 # training config
-# Mixtral-8x7B https://huggingface.co/mistralai/Mixtral-8x7B-v0.1/blob/main/config.json
+# qwen-2-57B-A14B: https://huggingface.co/Qwen/Qwen2-57B-A14B/blob/main/config.json
 SEQ_LENGTH=4096
 SLIDING_WINDOW_SIZE=4096
 DATA_PARALLEL_SIZE=$NUM_GPUS
@@ -60,8 +60,8 @@ fi
 TRAIN_STEPS=25000
 
 # optimizer config
-LR=2e-5
-MIN_LR=2e-6
+LR=2E-5
+MIN_LR=2E-6
 LR_WARMUP_STEPS=1000
 LR_DECAY_STEPS=25000
 WEIGHT_DECAY=0.1
@@ -72,9 +72,9 @@ ADAMW_BETA2=0.95
 ADAMW_EPS=1E-8
 
 # checkpoint & tokenizer
-TOKENIZER_MODEL=/gs/bs/tge-gc24sp01/hf-checkpoints/Mixtral-8x7B-Instruct-v0.1-VE/tokenizer.model
-CHECKPOINT_DIR=/gs/bs/tge-gc24sp01/hf-checkpoints/Mixtral-8x7B-Instruct-v0.1-VE
-CHECKPOINT_SAVE_DIR="/gs/bs/tge-gc24sp01/checkpoints/Mixtral-8x7B-Instruct-v0.1-VE/code-math-lr_${LR}-minlr_${MIN_LR}_warmup_${LR_WARMUP_STEPS}_seq_${SEQ_LENGTH}"
+TOKENIZER_MODEL=/gs/bs/tga-NII-LLM/hf-checkpoints/Qwen2-57B-A14B/tokenizer.json
+CHECKPOINT_DIR=/gs/bs/tga-NII-LLM/hf-checkpoints/Qwen2-57B-A14B
+CHECKPOINT_SAVE_DIR="/gs/bs/tge-gc24sp01/checkpoints/Qwen2-57B-A14B/LR_${LR}-minLR_${MIN_LR}_WARMUP_${LR_WARMUP_STEPS}_SEQ_${SEQ_LENGTH}"
 
 mkdir -p ${CHECKPOINT_SAVE_DIR}
 
@@ -83,10 +83,10 @@ mkdir -p ${CHECKPOINT_SAVE_DIR}
 DATA_PATH=""
 
 # ja okazaki lab cc
-DATA_PATH="${DATA_PATH} 7417203315 /gs/bs/tge-gc24sp01/datasets/mistral_original_Llama2Tokenizer/okazaki_lab_cc_03_1500_split_0_text_document"
+DATA_PATH="${DATA_PATH} 1 /gs/bs/tga-NII-LLM/datasets/binarized/swallow-meta-tag/Qwen2Tokenizer/ja_wiki_text_document"
 
 # deepspeed config
-DEEPSPEED_CONFIG="mixtral-8x7b.json"
+DEEPSPEED_CONFIG="qwen2-57B.json"
 
 BF16_ENABLED=true
 DEEPSPEED_ZERO_STAGE=3
@@ -136,7 +136,7 @@ EOF
 echo "$DEEPSPEED_CONGIG_CONTENT" >$DEEPSPEED_CONFIG
 
 # job name
-JOB_NAME="Mixtral-8x7B-Instruct-v0.1-NVE-${NODE_TYPE}-${NUM_NODES}node-${NUM_GPUS}gpu-${SEQ_LENGTH}s-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WARMUP=${LR_WARMUP_STEPS}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
+JOB_NAME="Qwen2-57B-${NODE_TYPE}-${NUM_NODES}node-${NUM_GPUS}gpu-${SEQ_LENGTH}s-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WARMUP=${LR_WARMUP_STEPS}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
 
 # run
 mpirun -np $NUM_GPUS \
@@ -154,7 +154,7 @@ mpirun -np $NUM_GPUS \
   --micro-batch-size ${MICRO_BATCH_SIZE} \
   --global-batch-size ${GLOBAL_BATCH_SIZE} \
   --train-iters ${TRAIN_STEPS} \
-  --tokenizer-type Llama2Tokenizer \
+  --tokenizer-type Qwen2Tokenizer \
   --tokenizer-model ${TOKENIZER_MODEL} \
   --data-path ${DATA_PATH} \
   --split 949,50,1 \
@@ -185,5 +185,5 @@ mpirun -np $NUM_GPUS \
   --use-mpi \
   --continual-pretraining \
   --wandb-entity "okoge" \
-  --wandb-project "Mixtral-8x7b" \
+  --wandb-project "moe-recipes" \
   --wandb-name "${JOB_NAME}"

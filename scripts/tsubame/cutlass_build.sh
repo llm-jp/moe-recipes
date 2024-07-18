@@ -15,14 +15,15 @@ module load ylab/nccl/cuda-12.2/2.20.5
 module load ylab/hpcx/2.17.1
 module load ninja/1.11.1
 
-# Set environment variables
-source .env/bin/activate
+# git clone
+git clone git@github.com:NVIDIA/cutlass.git
+cd cutlass
 
-pip install --upgrade pip
+# set environment variables
+export CUDACXX=${CUDA_HOME}/bin/nvcc
 
-# Install packages
-pip install -r requirements.txt
+# build for H100 (see: https://arnon.dk/matching-sm-architectures-arch-and-gencode-for-various-nvidia-cards/)
+mkdir build && cd build
+cmake .. -DCUTLASS_NVCC_ARCHS=90
 
-# flash attn
-pip install ninja packaging wheel
-pip install flash-attn --no-build-isolation
+

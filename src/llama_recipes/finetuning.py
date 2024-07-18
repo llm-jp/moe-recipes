@@ -12,6 +12,8 @@ from deepspeed.accelerator import get_accelerator
 from deepspeed.utils import set_z3_leaf_modules  # mixtral
 from torch.optim.lr_scheduler import StepLR
 from transformers.models.mixtral.modeling_mixtral import MixtralSparseMoeBlock
+from transformers.models.qwen2_moe.modeling_qwen2_moe import Qwen2MoeSparseMoeBlock
+from llama_recipes.models.deepseek_moe.modeling_deepseek import DeepseekMoE
 
 from llama_recipes.arguments import parse_args
 from llama_recipes.get_fsdp import get_sharding_strategy
@@ -24,6 +26,7 @@ from llama_recipes.utils.checkpoint import (
     load_rng_state_dict,
     load_scheduler_state_dict,
 )
+from llama_recipes.utils.precision import preserve_fp32_buffers
 from llama_recipes.utils.distributed import get_local_rank, get_rank, is_rank_0, print_rank_0, set_mpi_env
 from llama_recipes.utils.train_utils import clear_gpu_cache, print_model_size, setup_environ_flags, train
 from megatron_lm.megatron.global_vars import set_global_variables
@@ -84,6 +87,7 @@ def main() -> None:
             "name": args.wandb_name,
             "config": vars(args),
         }
+        wandb.require("core")
         wandb.init(**wandb_setting)
 
     if torch_distributed.is_initialized():
@@ -156,14 +160,24 @@ def main() -> None:
 
     print_model_size(model, args.base_model, rank)  # type: ignore
 
-    # Convert the model to bfloat16 if fsdp and pure_bf16 is enabled
-    if args.bf16:
-        model.to(torch.bfloat16)  # type: ignore
-    elif args.fp16:
-        model.to(torch.float16)  # type: ignore
+    # RoPE inv_freq etc. are stored in fp32, so we need to preserve them
+    with preserve_fp32_buffers(model):  # type: ignore
+        if args.bf16:
+            model.to(torch.bfloat16)  # type: ignore
+        elif args.fp16:
+            model.to(torch.float16)  # type: ignore
+
+    if "Mixtral" in args.base_model:
+        leaf_module_class = MixtralSparseMoeBlock
+    elif "Qwen" in args.base_model:
+        leaf_module_class = Qwen2MoeSparseMoeBlock
+    elif "deepseek" in args.base_model:
+        leaf_module_class = DeepseekMoE
+    else:
+        raise NotImplementedError(f"{args.base_model}: this model is not implemented.")
 
     set_z3_leaf_modules(  # z3_leaf
-        model=model, leaf_module_classes=[MixtralSparseMoeBlock]  # type: ignore
+        model=model, leaf_module_classes=[leaf_module_class]  # type: ignore
     )
     model.train()  # type: ignore
 
@@ -173,6 +187,7 @@ def main() -> None:
         betas=(args.adam_beta1, args.adam_beta2),
         eps=args.adam_eps,
         weight_decay=args.weight_decay,
+        fused=args.fused_optimizer,
     )
 
     if args.lr_decay_style == "cosine":
@@ -190,13 +205,14 @@ def main() -> None:
         load_scheduler_state_dict(scheduler, args.load)  # type: ignore
 
     # ref: https://github.com/microsoft/DeepSpeed/pull/5008#issuecomment-1910607845
-    model, optimizer, _, _, scheduler = accelerator.prepare(
-        model,
-        optimizer,
-        train_dataloader,
-        validation_dataloader,
-        scheduler,
-    )
+    with preserve_fp32_buffers(model):  # type: ignore
+        model, optimizer, _, _, scheduler = accelerator.prepare(
+            model,
+            optimizer,
+            train_dataloader,
+            validation_dataloader,
+            scheduler,
+        )
     if args.load:
         load_model_state_dict(model, args.load)  # type: ignore
 
