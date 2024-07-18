@@ -12,6 +12,7 @@ from deepspeed.accelerator import get_accelerator
 from deepspeed.utils import set_z3_leaf_modules  # mixtral
 from torch.optim.lr_scheduler import StepLR
 from transformers.models.mixtral.modeling_mixtral import MixtralSparseMoeBlock
+from transformers.models.qwen2_moe.modeling_qwen2_moe import Qwen2MoeSparseMoeBlock
 
 from llama_recipes.arguments import parse_args
 from llama_recipes.get_fsdp import get_sharding_strategy
@@ -165,8 +166,13 @@ def main() -> None:
         elif args.fp16:
             model.to(torch.float16)  # type: ignore
 
+    if "Mixtral" in args.base_model:
+        leaf_module_class = MixtralSparseMoeBlock
+    elif "Qwen" in args.base_model:
+        leaf_module_class = Qwen2MoeSparseMoeBlock
+
     set_z3_leaf_modules(  # z3_leaf
-        model=model, leaf_module_classes=[MixtralSparseMoeBlock]  # type: ignore
+        model=model, leaf_module_classes=[leaf_module_class]  # type: ignore
     )
     model.train()  # type: ignore
 

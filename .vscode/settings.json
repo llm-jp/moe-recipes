@@ -20,6 +20,7 @@
     "bettertransformer",
     "colour",
     "Concatenator",
+    "deepseek",
     "detokenize",
     "detokenizer",
     "ELYZA",

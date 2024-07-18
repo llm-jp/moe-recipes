@@ -1,4 +1,6 @@
 configs/*.json
+mixtral-8x7b.json
+qwen2-57B.json
 
 .DS_Store
 __pycache__

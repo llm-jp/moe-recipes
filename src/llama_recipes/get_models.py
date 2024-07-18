@@ -29,6 +29,7 @@ def get_model(
             model_name,
             attn_implementation="flash_attention_2",
             max_position_embeddings=args.seq_length,
+            sliding_window=args.seq_length,
             # ref: https://huggingface.co/Qwen/Qwen1.5-MoE-A2.7B/blob/main/config.json#L33
             output_router_logits=args.output_router_logits,
             torch_dtype=torch.bfloat16 if args.bf16 else torch.float16,
