@@ -110,6 +110,9 @@ DEEPSPEED_CONGIG_CONTENT=$(
   "bf16": {
     "enabled": $BF16_ENABLED
   },
+  "data_types": {
+    "grad_accum_dtype": "fp32"
+  },
   "zero_optimization": {
     "stage": $DEEPSPEED_ZERO_STAGE,
     "overlap_comm": $OVERLAP_COMMUNICATION,
