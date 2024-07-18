@@ -23,6 +23,8 @@ def parse_args() -> argparse.Namespace:
         assert args.no_save_optimizer_state is True
     if args.adam_eps > 1e-8:
         raise ValueError(f"Adam epsilon should be less than 1e-8, but got {args.adam_eps}")
+    if "Qwen" in args.base_model:
+        assert args.tokenizer_type != "Llama2Tokenizer"
 
     return args
 
@@ -132,7 +134,10 @@ def _add_data_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     group.add_argument('--num-workers', type=int, default=2, help="Dataloader number of workers.")
     group.add_argument(
         '--tokenizer-type', type=str, default=None,
-        choices=['SentencePieceTokenizer', 'GPTSentencePieceTokenizer', 'Llama2Tokenizer', 'NullTokenizer'],
+        choices=[
+            'SentencePieceTokenizer', 'GPTSentencePieceTokenizer', 'Llama2Tokenizer',
+            'Qwen2Tokenizer', 'NullTokenizer'
+        ],
         help='What type of tokenizer to use.'
     )
     group.add_argument('--tokenizer-model', type=str, default=None, help='Sentencepiece tokenizer model.')
