@@ -136,7 +136,7 @@ def _add_data_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         '--tokenizer-type', type=str, default=None,
         choices=[
             'SentencePieceTokenizer', 'GPTSentencePieceTokenizer', 'Llama2Tokenizer',
-            'Qwen2Tokenizer', 'NullTokenizer'
+            'Qwen2Tokenizer','DeepseekTokenizer' , 'NullTokenizer'
         ],
         help='What type of tokenizer to use.'
     )

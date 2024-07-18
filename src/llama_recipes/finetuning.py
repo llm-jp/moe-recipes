@@ -13,6 +13,7 @@ from deepspeed.utils import set_z3_leaf_modules  # mixtral
 from torch.optim.lr_scheduler import StepLR
 from transformers.models.mixtral.modeling_mixtral import MixtralSparseMoeBlock
 from transformers.models.qwen2_moe.modeling_qwen2_moe import Qwen2MoeSparseMoeBlock
+from llama_recipes.models.deepseek_moe.modeling_deepseek import DeepseekMoE
 
 from llama_recipes.arguments import parse_args
 from llama_recipes.get_fsdp import get_sharding_strategy
@@ -170,6 +171,10 @@ def main() -> None:
         leaf_module_class = MixtralSparseMoeBlock
     elif "Qwen" in args.base_model:
         leaf_module_class = Qwen2MoeSparseMoeBlock
+    elif "deepseek" in args.base_model:
+        leaf_module_class = DeepseekMoE
+    else:
+        raise NotImplementedError(f"{args.base_model}: this model is not implemented.")
 
     set_z3_leaf_modules(  # z3_leaf
         model=model, leaf_module_classes=[leaf_module_class]  # type: ignore

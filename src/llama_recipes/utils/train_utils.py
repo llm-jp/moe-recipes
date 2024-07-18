@@ -111,16 +111,20 @@ def train(
             with autocast():
                 output: MoeCausalLMOutputWithPast = model(**batch)
                 loss: torch.FloatTensor = output.loss  # type: ignore
-                load_balancing_loss: torch.FloatTensor = output.aux_loss  # type: ignore
+                load_balancing_loss = None  # type: ignore
+                if hasattr(output, "aux_loss"):
+                    load_balancing_loss: torch.FloatTensor = output.aux_loss  # type: ignore
             loss = loss / gradient_accumulation_steps  # type: ignore
-            load_balancing_loss = load_balancing_loss / gradient_accumulation_steps  # type: ignore
+            if load_balancing_loss is not None:
+                load_balancing_loss = load_balancing_loss / gradient_accumulation_steps  # type: ignore
 
             # ref: https://github.com/huggingface/accelerate/blob/main/examples/nlp_example.py#L167
             # doesn't work if use loss.backward()
             accelerator.backward(loss)
 
             total_loss += loss.item()
-            total_load_balancing_loss += load_balancing_loss.item()
+            if load_balancing_loss is not None:
+                total_load_balancing_loss += load_balancing_loss.item()
 
         # gradient clipping
         if args.grad_clip_norm > 0:

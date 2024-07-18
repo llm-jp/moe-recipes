@@ -5,6 +5,8 @@ from transformers import (
     AutoModelForCausalLM,
 )
 import torch
+
+from llama_recipes.models.deepseek_moe.modeling_deepseek import DeepseekForCausalLM
 from megatron_lm.megatron.global_vars import get_args
 
 
@@ -34,6 +36,16 @@ def get_model(
             output_router_logits=args.output_router_logits,
             torch_dtype=torch.bfloat16 if args.bf16 else torch.float16,
             use_cache=use_cache,
+        )
+
+    elif "deepseek" in model_name:
+        model = DeepseekForCausalLM.from_pretrained(
+            model_name,
+            attn_implementation="flash_attention_2",
+            max_position_embeddings=args.seq_length,
+            torch_dtype=torch.bfloat16 if args.bf16 else torch.float16,
+            use_cache=use_cache,
+            trust_remote_code=True,
         )
 
     else:
