@@ -1,11 +1,12 @@
 #!/bin/sh
 #$ -cwd
-#$ -l node_f=16
+#$ -l node_f=8
 #$ -l h_rt=120:00:00
 #$ -o outputs/upcycle/mixtral-8×1.56b_torch_rand/$JOB_ID
 #$ -e outputs/upcycle/mixtral-8×1.56b_torch_rand/$JOB_ID
 #$ -p -5
 
+set -e
 # Load modules
 module use /gs/fs/tga-NII-LLM/modules/modulefiles
 
@@ -47,7 +48,7 @@ SEQ_LENGTH=4096
 SLIDING_WINDOW_SIZE=4096
 DATA_PARALLEL_SIZE=$NUM_GPUS
 
-MICRO_BATCH_SIZE=8
+MICRO_BATCH_SIZE=16
 GLOBAL_BATCH_SIZE=1024
 GRADIENTS_ACCUMULATION_STEPS=$((GLOBAL_BATCH_SIZE / MICRO_BATCH_SIZE / NUM_GPUS))
 
