@@ -2,8 +2,8 @@
 #$ -cwd
 #$ -l node_f=8
 #$ -l h_rt=200:00:00
-#$ -o outputs/upcycle/mixtral-8×1.56b_torch_rand_002_shuffle0.5/$JOB_ID
-#$ -e outputs/upcycle/mixtral-8×1.56b_torch_rand_002_shuffle0.5/$JOB_ID
+#$ -o outputs/upcycle/mixtral-8×1.56b_torch_rand_002_shuffle1.0/$JOB_ID
+#$ -e outputs/upcycle/mixtral-8×1.56b_torch_rand_002_shuffle1.0/$JOB_ID
 #$ -p -5
 
 set -e
@@ -74,9 +74,9 @@ ADAMW_BETA2=0.95
 ADAMW_EPS=1E-8
 
 # checkpoint & tokenizer
-TOKENIZER_MODEL=/gs/bs/tgh-NII-LLM/checkpoints/upcycle-Mixtral-8x1.56B-shuffle_torch_rand_002_random_init_0.5/tokenizer.model
-CHECKPOINT_DIR=/gs/bs/tgh-NII-LLM/checkpoints/upcycle-Mixtral-8x1.56B-shuffle_torch_rand_002_random_init_0.5/
-CHECKPOINT_SAVE_DIR="/gs/bs/tgh-NII-LLM/checkpoints/upcycle-Mixtral-8x1.56B-shuffle_torch_rand_002_random_init_0.5_main_zero3/lr_${LR}-minlr_${MIN_LR}_warmup_${LR_WARMUP_STEPS}_seq_${SEQ_LENGTH}"
+TOKENIZER_MODEL=/gs/bs/tgh-NII-LLM/checkpoints/upcycle-Mixtral-8x1.56B-shuffle_torch_rand_002_random_init_1.0/tokenizer.model
+CHECKPOINT_DIR=/gs/bs/tgh-NII-LLM/checkpoints/upcycle-Mixtral-8x1.56B-shuffle_torch_rand_002_random_init_1.0/
+CHECKPOINT_SAVE_DIR="/gs/bs/tgh-NII-LLM/checkpoints/upcycle-Mixtral-8x1.56B-shuffle_torch_rand_002_random_init_1.0_main_zero3/lr_${LR}-minlr_${MIN_LR}_warmup_${LR_WARMUP_STEPS}_seq_${SEQ_LENGTH}"
 
 mkdir -p ${CHECKPOINT_SAVE_DIR}
 
@@ -279,7 +279,7 @@ echo "$DEEPSPEED_CONGIG_CONTENT" >$DEEPSPEED_CONFIG
 
 # job name
 
-JOB_NAME="upcycle-8×1.56B-shuffle_torch_rand_002_random_init_0.5-${NODE_TYPE}-${NUM_NODES}node-${NUM_GPUS}gpu-${SEQ_LENGTH}s-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WARMUP=${LR_WARMUP_STEPS}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
+JOB_NAME="upcycle-8×1.56B-shuffle_torch_rand_002_random_init_1.0-${NODE_TYPE}-${NUM_NODES}node-${NUM_GPUS}gpu-${SEQ_LENGTH}s-BS=${GLOBAL_BATCH_SIZE}-LR=${LR}-MINLR=${MIN_LR}-WARMUP=${LR_WARMUP_STEPS}-WD=${WEIGHT_DECAY}-GC=${GRAD_CLIP}"
 
 
 
