@@ -329,6 +329,6 @@ mpirun -np $NUM_GPUS \
   --output-router-logits \
   --use-mpi \
   --continual-pretraining \
-  --wandb-entity "prj-jalm" \
+  --wandb-entity "llm-jp" \
   --wandb-project "upcycle-8×1.56B" \
   --wandb-name "${JOB_NAME}"
