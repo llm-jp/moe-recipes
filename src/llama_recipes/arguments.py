@@ -166,6 +166,13 @@ def _add_data_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
         help='Number of additional vocabulary tokens. They are used for span masking in the T5 model'
     )
     group.add_argument("--dataset-cyclic", action="store_true")
+    # instruction tuning
+    group.add_argument(
+        '--system-prompt-role', type=str, default="system"
+    )
+    group.add_argument(
+        '--system-prompt-content', type=str, default='あなたは誠実で優秀な日本人のアシスタントです。'
+    )
 
     return parser
 

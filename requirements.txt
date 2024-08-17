@@ -11,11 +11,10 @@ peft
 appdirs
 loralib
 scipy
-py7zr  # 圧縮解凍library
+py7zr
 bitsandbytes
-fire  # argparser
+fire
 
-# formatter & linter
 black
 flake8
 
