@@ -61,6 +61,8 @@ def train(
 
     Returns: results dictionary containing average training and validation perplexity and loss
     """
+    clear_gpu_cache()
+    torch.cuda.empty_cache()
     args = get_args()
 
     world_size = int(os.environ["WORLD_SIZE"])
